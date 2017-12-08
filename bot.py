@@ -23,12 +23,16 @@ def hello(bot, update):
 def test(bot, update):
 	update.message.reply_text(
 	'Test received {}'.format(update.message.from_user.first_name))
+	
+def shrug(bot, update):
+	update.message.reply_text('¯\_(ツ)_/¯')
 
 updater = Updater(token)
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('hello', hello))
 updater.dispatcher.add_handler(CommandHandler('test', test))
+updater.dispatcher.add_handler(CommandHandler('shrug', shrug))
 
 updater.start_polling()
 updater.idle()
