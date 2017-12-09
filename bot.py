@@ -29,8 +29,10 @@ def shrug(bot, update):
 	print ('{} used shrug'.format(update.message.from_user.first_name))
 	
 def delete(bot, update):
-	id = update.message.id
-	bot.delete_message(message_id = id)
+	print ('{} triggered delete'.format(update.message.from_user.first_name))
+	del_msg_id = update.message.message_id
+	del_chat_id = update.message.chat_id
+	bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
 	
 
 updater = Updater(token)
