@@ -19,16 +19,16 @@ def sendMsg(bot, update, text):
 	text = text)
 
 def start(bot, update):
-	sendMsg('Hello World!')
+	sendMsg(bot, update, 'Hello World!')
 
 def hello(bot, update):
-	sendMsg('Hello {}'.format(update.message.from_user.first_name))
+	sendMsg(bot, update, 'Hello {}'.format(update.message.from_user.first_name))
 	
 def test(bot, update):
-	sendMsg('Test received {}'.format(update.message.from_user.first_name))
+	sendMsg(bot, update, 'Test received {}'.format(update.message.from_user.first_name))
 	
 def shrug(bot, update):
-	sendMsg('¯\_(ツ)_/¯')
+	sendMsg(bot, update, '¯\_(ツ)_/¯')
 	
 def delete(bot, update):
 	print ('{} triggered delete'.format(update.message.from_user.first_name))
