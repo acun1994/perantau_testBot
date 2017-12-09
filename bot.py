@@ -17,6 +17,10 @@ def sendMsg(bot, update, text):
 	bot.sendMessage(
 	chat_id = update.message.chat_id,
 	text = text)
+	
+def log(username, chat_id):
+	functionName = sys._getframe(1).f_code.co_name
+	print('{} from {} triggered {}'.format(username, chat_id, functionName)
 
 def start(bot, update):
 	sendMsg(bot, update, 'Hello World!')
@@ -32,7 +36,7 @@ def shrug(bot, update):
 	delete(bot, update.message)
 	
 def delete(bot, msg):
-	print ('{} triggered delete'.format(msg.from_user.first_name))
+	log(msg.from_user.first_name, msg.chat_id)
 	del_msg_id = msg.message_id
 	del_chat_id = msg.chat_id
 	bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
