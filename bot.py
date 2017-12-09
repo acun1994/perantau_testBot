@@ -20,7 +20,7 @@ def sendMsg(bot, update, text):
 	
 def log(username, chat_id):
 	functionName = sys._getframe(1).f_code.co_name
-	print('{} from {} triggered {}'.format(username, chat_id, functionName)
+	print('{} from {} triggered {}'.format(username, chat_id, functionName))
 
 def start(bot, update):
 	sendMsg(bot, update, 'Hello World!')
