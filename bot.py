@@ -13,20 +13,22 @@ token = os.environ['TELEGRAM_TOKEN']
 #r = redis.from_url(os.environ.get("REDIS_URL"))
 from telegram.ext import Updater, CommandHandler
 
+def sendMsg(bot, update, text):
+	bot.sendMessage(
+	chat_id = update.message.chat_id,
+	text = text)
+
 def start(bot, update):
-	update.message.reply_text('Hello World!')
+	sendMsg('Hello World!')
 
 def hello(bot, update):
-	update.message.reply_text(
-	'Hello {}'.format(update.message.from_user.first_name))
+	sendMsg('Hello {}'.format(update.message.from_user.first_name))
 	
 def test(bot, update):
-	update.message.reply_text(
-	'Test received {}'.format(update.message.from_user.first_name))
+	sendMsg('Test received {}'.format(update.message.from_user.first_name))
 	
 def shrug(bot, update):
-	update.message.reply_text('¯\_(ツ)_/¯')
-	print ('{} used shrug'.format(update.message.from_user.first_name))
+	sendMsg('¯\_(ツ)_/¯')
 	
 def delete(bot, update):
 	print ('{} triggered delete'.format(update.message.from_user.first_name))
