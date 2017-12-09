@@ -35,7 +35,7 @@ def shrug(bot, update):
 	delete(bot, update.message)
 	
 def delete(bot, msg):
-	print('{} from {} triggered {}'.format(msg.from_user.first_name, msg.chat.title, 'delete'))
+	print('{} from {} triggered {}'.format(msg.from_user.first_name, msg.chat.username, 'delete'))
 	del_msg_id = msg.message_id
 	del_chat_id = msg.chat_id
 	bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
