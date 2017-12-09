@@ -26,6 +26,7 @@ def test(bot, update):
 	
 def shrug(bot, update):
 	update.message.reply_text('¯\_(ツ)_/¯')
+	print ('{} used shrug'.format(update.message.from_user.first_name))
 	
 def delete(bot, update):
 	id = update.message.id
