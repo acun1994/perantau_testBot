@@ -28,12 +28,13 @@ def test(bot, update):
 	sendMsg(bot, update, 'Test received {}'.format(update.message.from_user.first_name))
 	
 def shrug(bot, update):
-	sendMsg(bot, update, '¯\_(ツ)_/¯')
+	sendMsg(bot, update, '{} : ¯\_(ツ)_/¯'.format(update.message.from_user.first_name))
+	delete(bot, update.message)
 	
-def delete(bot, update):
-	print ('{} triggered delete'.format(update.message.from_user.first_name))
-	del_msg_id = update.message.message_id
-	del_chat_id = update.message.chat_id
+def delete(bot, msg):
+	print ('{} triggered delete'.format(msg.from_user.first_name))
+	del_msg_id = msg.message_id
+	del_chat_id = msg.chat_id
 	bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
 	
 
@@ -43,7 +44,6 @@ updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('hello', hello))
 updater.dispatcher.add_handler(CommandHandler('test', test))
 updater.dispatcher.add_handler(CommandHandler('shrug', shrug))
-updater.dispatcher.add_handler(CommandHandler('delete', delete))
 
 updater.start_polling()
 updater.idle()
