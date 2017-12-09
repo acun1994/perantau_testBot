@@ -26,6 +26,11 @@ def test(bot, update):
 	
 def shrug(bot, update):
 	update.message.reply_text('¯\_(ツ)_/¯')
+	
+def delete(bot, update):
+	id = update.message.id
+	bot.delete_message(message_id = id)
+	
 
 updater = Updater(token)
 
@@ -33,6 +38,7 @@ updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('hello', hello))
 updater.dispatcher.add_handler(CommandHandler('test', test))
 updater.dispatcher.add_handler(CommandHandler('shrug', shrug))
+updater.dispatcher.add_handler(CommandHandler('delete', delete))
 
 updater.start_polling()
 updater.idle()
