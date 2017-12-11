@@ -90,6 +90,7 @@ def event(bot, update):
 			sendMsg(bot, lastEventCaller.chat_id, "{} created a test event".format(lastEventCaller.user.first_name))
 			lastEventCaller = ''
 	
+
 #Register handlers
 updater = Updater(token)
 
