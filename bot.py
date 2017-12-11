@@ -38,7 +38,7 @@ datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-
 
 #Helper functions
 def sendMsg(bot, msg, text, reply = False):
-	if (reply): reply_id = msg.message_id
+	if (reply == True): reply_id = msg.message_id
 	else: reply_id = None
 	bot.sendMessage(
 	chat_id = msg.chat_id,
@@ -136,6 +136,8 @@ def event(bot, update, args):
 		else:
 			addedEvent = Event(update.message.from_user.username, args[1], ' '.join(args[2:]))
 			events.append(addedEvent)
+			replyMsg(bot, update.message, "Event added")
+			
 	
 	else:
 		replyMsg(bot, update.message, 
