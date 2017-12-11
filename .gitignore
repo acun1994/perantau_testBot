@@ -101,4 +101,4 @@ ENV/
 .mypy_cache/
 
 #testing file
-D:\heroku-telegram-bot\bot2.py
+bot2.py
