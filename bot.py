@@ -13,6 +13,12 @@ token = os.environ['TELEGRAM_TOKEN']
 #r = redis.from_url(os.environ.get("REDIS_URL"))
 import telegram
 from telegram.ext import Updater, CommandHandler
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 def sendMsg(bot, update, text):
 	bot.sendMessage(
@@ -36,11 +42,16 @@ def shrug(bot, update):
 	delete(bot, update.message)
 	
 def delete(bot, msg):
-	print('{} from {} triggered {}'.format(msg.from_user.first_name, msg.chat.username, 'delete'))
-	del_msg_id = msg.message_id
-	del_chat_id = msg.chat_id
-	bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
+	if inGroup(bot, msg):
+		logger.info('{} from {} triggered {}'.format(msg.from_user.first_name, msg.chat.title, 'delete'))
+		del_msg_id = msg.message_id
+		del_chat_id = msg.chat_id
+		bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
+	else:
+		logger.info('Could not {} in private chat {}'.format('delete', msg.chat.username ))
 	
+def inGroup(bot, msg):
+	return msg.chat.get_members_count() > 2
 
 updater = Updater(token)
 
