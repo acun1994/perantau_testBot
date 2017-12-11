@@ -77,14 +77,16 @@ def shrug(bot, update):
 	
 def event(bot, update):
 	if inGroup(update.message):
-		update.message.reply_text("Remember to start a private chat with me first")
+		update.message.reply_text("Remember to start a private chat with me")
 		global lastEventCaller
 		lastEventCaller = PersonChat(update.message.from_user, update.message.chat_id, getChatName(update.message))
 		
 		print("Tracking event from {} in {}".format(lastEventCaller.user.first_name, lastEventCaller.chat_name))
 	else:
-		print("Attempting event from {} in {}".format(lastEventCaller.user.first_name, lastEventCaller.chat_name))
-		if (lastEventCaller != ''):
+		if (lastEventCaller == ''):
+			update.message.reply_text("Please create an event from a group chat first")
+		else:
+			print("Attempting event from {} in {}".format(lastEventCaller.user.first_name, lastEventCaller.chat_name))
 			sendMsg(bot, lastEventCaller.chat_id, "{} created a test event".format(lastEventCaller.user.first_name))
 			lastEventCaller = ''
 	
