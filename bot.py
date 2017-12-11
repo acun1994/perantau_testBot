@@ -38,11 +38,12 @@ datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-
 
 #Helper functions
 def sendMsg(bot, msg, text, reply = False):
-	if (reply == True): reply_id = msg.message_id
-	else: reply_id = None
+	reply_id = None
+	if (reply is True): 
+		reply_id = msg.message_id
 	bot.sendMessage(
 	chat_id = msg.chat_id,
-	reply_to_message = reply_id,
+	reply_to_message_id = reply_id,
 	text = text,
 	parse_mode=telegram.ParseMode.MARKDOWN)
 	
