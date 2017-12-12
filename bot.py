@@ -88,7 +88,7 @@ def test(bot, update):
 	sendMsg(bot, update.message, 'Test received {}'.format(update.message.from_user.first_name))
 	
 def shrug(bot, update):
-	sendMsg(bot, update.message, '{} : ¯\_(ツ)_/¯'.format(update.message.from_user.first_name))
+	sendMsg(bot, update.message, '{}: ¯\\\_(ツ)\_/¯'.format(update.message.from_user.first_name))
 	delete(bot, update.message)
 	
 #def event(bot, update):
