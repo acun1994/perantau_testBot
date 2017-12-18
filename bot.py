@@ -86,6 +86,11 @@ def hello(bot, update):
 def test(bot, update):
 	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'test'))
 	sendMsg(bot, update.message, 'Test received {}'.format(update.message.from_user.first_name))
+
+def payRespects(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'respect'))
+	sendMsg(bot, update.message, '{} has paid respects'.format(update.message.from_user.first_name))
+	delete(bot, update.message)
 	
 def shrug(bot, update):
 	sendMsg(bot, update.message, '{}: ¯\\\_(ツ)\_/¯'.format(update.message.from_user.first_name))
@@ -159,6 +164,7 @@ dp.add_handler(CommandHandler('hello', hello))
 dp.add_handler(CommandHandler('test', test))
 dp.add_handler(CommandHandler('shrug', shrug))
 dp.add_handler(CommandHandler('event', event, pass_args = True))
+dp.add_handler(CommandHandler('f', payRespects))
 
 #Error Handlers
 dp.add_error_handler(error)
