@@ -192,7 +192,9 @@ conv_handler = ConversationHandler(
 
         },
 
-        fallbacks=[RegexHandler('^/shrug$', shrug)]
+        fallbacks=[	RegexHandler('^Hello|Ping Me!$|Pay Respect|Shrug like AI Chan', shrug)],
+
+		allow_reentry=True
     )
 
 #Command Handlers
