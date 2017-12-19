@@ -16,7 +16,8 @@ from collections import namedtuple
 PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
 Event = namedtuple('Event', 'username date name')
 
-from telegram.ext import Updater,CommandHandler, MessageHandler, Filters
+from telegram import ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
 import logging
 
 #def echo(bot, update):
@@ -36,19 +37,33 @@ lastEventCaller = ''
 
 datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-9]|1[0-2])(\d{2})")
 
+#defining reply markup keyboard
+CHOOSING = range(1)
+reply_keyboard = [['Hello', 'Ping Me!'],
+                  ['Pay Respect', 'Shrug like AI Chan']]
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, selective=True)
+
 #Helper functions
-def sendMsg(bot, msg, text, reply = False):
+def sendMsg(bot, msg, text, reply = False, keyboard = False):
 	reply_id = None
+	reply_markup_flag = None
 	if (reply is True): 
 		reply_id = msg.message_id
+	if (keyboard is True):
+		reply_markup_flag = markup
 	bot.sendMessage(
 	chat_id = msg.chat_id,
 	reply_to_message_id = reply_id,
 	text = text,
-	parse_mode=telegram.ParseMode.MARKDOWN)
+	parse_mode = telegram.ParseMode.MARKDOWN,
+	reply_markup = reply_markup_flag)
+
 	
 def replyMsg(bot, msg, text):
 	sendMsg(bot, msg, text, True)
+
+def keyboardMsg(bot, msg, text):
+	sendMsg(bot, msg, text, False, True)
 	
 def inGroup(msg):
 	return msg.chat.get_members_count() > 2
@@ -95,6 +110,11 @@ def payRespects(bot, update):
 def shrug(bot, update):
 	sendMsg(bot, update.message, '{}: ¯\\\_(ツ)\_/¯'.format(update.message.from_user.first_name))
 	delete(bot, update.message)
+
+def help(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'help'))
+	keyboardMsg(bot, update.message, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name))
+	return CHOOSING
 	
 #def event(bot, update):
 #	if inGroup(update.message):
@@ -158,6 +178,23 @@ updater = Updater(token)
 
 dp = updater.dispatcher
 
+#Conversation Handlers, for KeyboardMarkup
+conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('help', help)],
+
+        states={
+            CHOOSING: [	RegexHandler('^Hello$', hello),
+						RegexHandler('^Ping Me!$', test),
+						RegexHandler('^Pay Respect$', payRespects),
+						RegexHandler('^Shrug like AI Chan$', shrug),
+                       ],
+
+
+        },
+
+        fallbacks=[RegexHandler('^/shrug$', shrug)]
+    )
+
 #Command Handlers
 dp.add_handler(CommandHandler('start', start))
 dp.add_handler(CommandHandler('hello', hello))
@@ -165,6 +202,7 @@ dp.add_handler(CommandHandler('test', test))
 dp.add_handler(CommandHandler('shrug', shrug))
 dp.add_handler(CommandHandler('event', event, pass_args = True))
 dp.add_handler(CommandHandler('f', payRespects))
+dp.add_handler(conv_handler)
 
 #Error Handlers
 dp.add_error_handler(error)
