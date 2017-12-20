@@ -41,7 +41,7 @@ datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-
 CHOOSING = range(1)
 reply_keyboard = [['Hello', 'Ping Me!'],
                   ['Pay Respect', 'Shrug like AI Chan']]
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, selective=True)
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 #Helper functions
 def sendMsg(bot, msg, text, reply = False, keyboard = False):
