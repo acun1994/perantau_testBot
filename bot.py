@@ -1,49 +1,58 @@
+# DEV : Remnants, no need to modify
 # -*- coding: utf-8 -*-
-import os, telegram, re
-# import some_api_lib
-# import ...
-
-# Example of your code beginning
-#           Config vars
-token = os.environ['TELEGRAM_TOKEN']
-#some_api_token = os.environ['SOME_API_TOKEN']
-#             ...
-
 # If you use redis, install this add-on https://elements.heroku.com/addons/heroku-redis
 #r = redis.from_url(os.environ.get("REDIS_URL"))
-from collections import namedtuple
 
+# DEV : Comment Syntax
+# 		DEV - meant for Development-specific options or comments
+#		DEF - variable/handler/import definitions and declarations
+#		FUN - explains what functions do. Max 2 sentences
+#		VAR - explains use of variable. Include which module it belongs to
+#		LOG - meant for Logging/Debug-specific functions or comments
+# 		EFF - catalogue side-effects that change things outside of the function
+
+# DEV : Python Note
+# Multiline strings in IDE can be done by escaping newline /[ENTER]
+# Python can accept function parameters out of order. Just specify parameter name as defined in function declaration
+# Split long function calls into multiple lines, with each parameter in its own line and named correctly
+# Be careful of 
+
+# DEV : Replace this with dev token if you are testing out code
+token = os.environ['TELEGRAM_TOKEN']
+
+# DEF : Imports
+import os, telegram, re, logging
+from collections import namedtuple
+from telegram import ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
+
+# DEF : Class definitions
 PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
 Event = namedtuple('Event', 'username date name')
 
-from telegram import ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
-import logging
-
-#def echo(bot, update):
-#    bot.send_message(chat_id=update.message.chat_id, text=update.message.text)
-#echo_handler = MessageHandler(Filters.text, echo)
-#dispatcher.add_handler(echo_handler)
-
+# LOG : Logger declaration
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
-
 logger = logging.getLogger(__name__)
 
-#Private chat tracker
+# DEF : Global vars
+# VAR : Tracking vars for event module
 private_chats = []
 events= []
 lastEventCaller = ''
 
+# DEF : Regex for date pattern matching
+#       Returns true for all valid dates between 010100 to 311299
+#       Does not handle leap days
 datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-9]|1[0-2])(\d{2})")
 
-#defining reply markup keyboard
+# DEF : Keyboard layout for Custom Keyboard module
 CHOOSING = range(1)
 reply_keyboard = [['Hello', 'Ping Me!'],
                   ['Pay Respect', 'Shrug like AI Chan']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
-#Helper functions
+# FUN : Sends message
 def sendMsg(bot, msg, text, reply = False, keyboard = False):
 	reply_id = None
 	reply_markup_flag = None
@@ -52,42 +61,56 @@ def sendMsg(bot, msg, text, reply = False, keyboard = False):
 	if (keyboard is True):
 		reply_markup_flag = markup
 	bot.sendMessage(
-	chat_id = msg.chat_id,
-	reply_to_message_id = reply_id,
-	text = text,
-	parse_mode = telegram.ParseMode.MARKDOWN,
-	reply_markup = reply_markup_flag)
+		chat_id = msg.chat_id,
+		reply_to_message_id = reply_id,
+		text = text,
+		parse_mode = telegram.ParseMode.MARKDOWN,
+		reply_markup = reply_markup_flag
+	)
 
-	
+# FUN : Sends a reply message to msg
 def replyMsg(bot, msg, text):
-	sendMsg(bot, msg, text, True)
+	sendMsg(bot, msg, text, reply = True)
 
+# FUN : Sends a prepared message according to custom keyboard
 def keyboardMsg(bot, msg, text):
-	sendMsg(bot, msg, text, False, True)
+	sendMsg(bot, msg, text, keyboard = True)
 	
+# FUN : Returns true if in a group chat	
 def inGroup(msg):
 	return msg.chat.get_members_count() > 2
-	
+
+# FUN : Returns an identifiable name for chats
+#       Groups use title as name
+#       Private chats use their name	
 def getChatName(msg):
 	if inGroup(msg):
 		return msg.chat.title
 	else:
 		return msg.chat.username
-		
+
+# FUN : Deletes message specified as msg		
 def delete(bot, msg):
 	if inGroup(msg):
 		logger.info('{} from {} triggered {}'.format(msg.from_user.first_name, getChatName(msg), 'delete'))
 		del_msg_id = msg.message_id
 		del_chat_id = msg.chat_id
-		bot.deleteMessage(chat_id = del_chat_id, message_id = del_msg_id)
+		bot.deleteMessage(
+			chat_id = del_chat_id, 
+			message_id = del_msg_id
+		)
 	else:
 		logger.info('Could not {} in private chat {}'.format('delete', getChatName(msg)))
 	
-#Error logging	
+# LOG : Logs error
 def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
-#Command Handler Recipients
+# DEF : Handlers
+
+# HND : Handles /start. Required for API compliance
+# FUN : Sends arbitrary startup message
+# EFF : Registers private chats into local storage
 def start(bot, update):
 	sendMsg(bot, update.message, 'Hello World!')
 	privateChatTuple = PersonChat(update.message.from_user, update.message.chat_id)
@@ -95,42 +118,44 @@ def start(bot, update):
 		private_chats.append(privateChatTuple)
 		print (private_chats)
 
+# HND : Handles /hello. Required for API compliance
+# FUN : Sends arbitrary greeting message
 def hello(bot, update):
-	sendMsg(bot, update.message, 'Hello {}'.format(update.message.from_user.first_name))
+	replyMsg(bot, update.message, 'Hello {}'.format(update.message.from_user.first_name))
 	
+# HND : Handles /test.
+# FUN : Sends arbitrary ping message
 def test(bot, update):
 	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'test'))
-	sendMsg(bot, update.message, 'Test received {}'.format(update.message.from_user.first_name))
+	replyMsg(bot, update.message, 'Test received {}'.format(update.message.from_user.first_name))
 
+# HND : Handles /f.
+# FUN : Sends Pay Respects meme
+# EFF : Deletes trigger message
 def payRespects(bot, update):
 	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'respect'))
 	sendMsg(bot, update.message, '{} has paid respects'.format(update.message.from_user.first_name))
 	delete(bot, update.message)
-	
+
+# HND : Handles /shrug
+# FUN : Sends ASCII shrug emoticon
+# EFF : Deletes trigger message
 def shrug(bot, update):
 	sendMsg(bot, update.message, '{}: ¯\\\_(ツ)\_/¯'.format(update.message.from_user.first_name))
 	delete(bot, update.message)
 
+# HND : Handles /help
+# FUN : Creates custom keyboard layout with 4 functions preset
+# EFF : Caller keyboard is replaced with 4-button keyboard for 1 message
 def help(bot, update):
 	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'help'))
 	keyboardMsg(bot, update.message, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name))
 	return CHOOSING
-	
-#def event(bot, update):
-#	if inGroup(update.message):
-#		update.message.reply_text("Remember to start a private chat with me")
-#		global lastEventCaller
-#		lastEventCaller = PersonChat(update.message.from_user, update.message.chat_id, getChatName(update.message))
-		
-#		print("Tracking event from {} in {}".format(lastEventCaller.user.first_name, lastEventCaller.chat_name))
-#	else:
-#		if (lastEventCaller == ''):
-#			update.message.reply_text("Please create an event from a group chat first")
-#		else:
-#			print("Attempting event from {} in {}".format(lastEventCaller.user.first_name, lastEventCaller.chat_name))
-#			sendMsg(bot, lastEventCaller.chat_id, "{} created a test event".format(lastEventCaller.user.first_name))
-#			lastEventCaller = ''
 
+
+# HND : Handles /event
+# FUN : Module for event registering and recording. TODO : Split into multiple subfunctions for clarity
+# EFF : Modifies local storage for events
 def event(bot, update, args):
 	if (len(args) == 0):
 		replyMsg(bot, update.message, 
@@ -172,13 +197,8 @@ def event(bot, update, args):
 			`/event add [DDMMYY] [event name]` \nFor multi-word names, just type as usual \n\
 			\nTo view events , use the command \n\
 			`/event list`")
-	
-#Register handlers
-updater = Updater(token)
 
-dp = updater.dispatcher
-
-#Conversation Handlers, for KeyboardMarkup
+# HND : Prep for in-text handling
 conv_handler = ConversationHandler(
         entry_points=[CommandHandler('help', help)],
 
@@ -196,8 +216,13 @@ conv_handler = ConversationHandler(
 
 		allow_reentry=True
     )
+	
+# HND : Registers handlers and updaters
+updater = Updater(token)
 
-#Command Handlers
+dp = updater.dispatcher
+
+# HND : Command Handlers
 dp.add_handler(CommandHandler('start', start))
 dp.add_handler(CommandHandler('hello', hello))
 dp.add_handler(CommandHandler('test', test))
@@ -206,7 +231,7 @@ dp.add_handler(CommandHandler('event', event, pass_args = True))
 dp.add_handler(CommandHandler('f', payRespects))
 dp.add_handler(conv_handler)
 
-#Error Handlers
+# HND : Error Handlers
 dp.add_error_handler(error)
 
 updater.start_polling()
