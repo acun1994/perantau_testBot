@@ -15,16 +15,16 @@
 # Multiline strings in IDE can be done by escaping newline /[ENTER]
 # Python can accept function parameters out of order. Just specify parameter name as defined in function declaration
 # Split long function calls into multiple lines, with each parameter in its own line and named correctly
-# Be careful of 
-
-# DEV : Replace this with dev token if you are testing out code
-token = os.environ['TELEGRAM_TOKEN']
+# Be careful of whitespace. Python is whitespace sensititve
 
 # DEF : Imports
 import os, telegram, re, logging
 from collections import namedtuple
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
+
+# DEV : Replace this with dev token if you are testing out code
+token = os.environ['TELEGRAM_TOKEN']
 
 # DEF : Class definitions
 PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
