@@ -29,6 +29,7 @@ token = os.environ['TELEGRAM_TOKEN']
 # DEF : Class definitions
 PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
 Event = namedtuple('Event', 'username date name')
+Pinned = namedtuple('Pinned', 'chat_id message_id')
 
 # LOG : Logger declaration
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -40,6 +41,9 @@ logger = logging.getLogger(__name__)
 private_chats = []
 events= []
 lastEventCaller = ''
+
+# VAR : Tracking var for pinned messages
+pinnedMessages = []
 
 # DEF : Regex for date pattern matching
 #       Returns true for all valid dates between 010100 to 311299
@@ -60,7 +64,7 @@ def sendMsg(bot, msg, text, reply = False, keyboard = False):
 		reply_id = msg.message_id
 	if (keyboard is True):
 		reply_markup_flag = markup
-	bot.sendMessage(
+	return bot.sendMessage(
 		chat_id = msg.chat_id,
 		reply_to_message_id = reply_id,
 		text = text,
@@ -76,6 +80,15 @@ def replyMsg(bot, msg, text):
 def keyboardMsg(bot, msg, text):
 	sendMsg(bot, msg, text, keyboard = True)
 	
+
+# FUN : Pins a message
+def pinMsg(bot, msg):
+	bot.pinChatMessage(
+		chat_id = msg.chat_id,
+		message_id = msg.message_id,
+		disable_notification = True
+	)
+
 # FUN : Returns true if in a group chat	
 def inGroup(msg):
 	return msg.chat.get_members_count() > 2
@@ -152,6 +165,45 @@ def help(bot, update):
 	keyboardMsg(bot, update.message, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name))
 	return CHOOSING
 
+# HND : Handles /pin
+# FUN : Pins a bot-written message to the chat
+# EFF : Chat has new pinned message
+def pin(bot, update, args):
+	if (len(args) == 0):
+		replyMsg(bot, update.message, "Please specify what to pin")
+		return
+
+	text =' '.join(args)
+	curPinnedMessage = bot.get_chat(update.message.chat_id).pinned_message
+
+	if (curPinnedMessage is not None):
+		pinnedMessageTuple = Pinned(update.message.chat_id, curPinnedMessage.message_id)
+
+		if (update.message.chat_id in [x[0] for x in pinnedMessages]):
+			pinnedMessages[:] = [pinnedMessageTuple if ele[0] == update.message.chat_id else ele for ele in pinnedMessages]
+		else:
+			pinnedMessages.append(pinnedMessageTuple)
+
+	msg_id = sendMsg(bot, update.message, text)
+
+	pinMsg(bot, msg_id)
+
+
+# HND : Handles /unpin
+# FUN : Replaces current pinned message with previous if available
+def unpin(bot, update):
+	curPinnedMessage = bot.get_chat(update.message.chat_id).pinned_message
+
+	if (curPinnedMessage is not None):
+		if (update.message.chat_id in [x[0] for x in pinnedMessages]):
+			idx = [x[0] for x in pinnedMessages].index(update.message.chat_id)
+			logger.info(pinnedMessages[idx])
+			bot.pinChatMessage(
+				chat_id = update.message.chat_id,
+				message_id = pinnedMessages[idx][1],
+				disable_notification = True	)
+		else:
+			bot.unpinChatMessage(update.message.chat_id)
 
 # HND : Handles /event
 # FUN : Module for event registering and recording. TODO : Split into multiple subfunctions for clarity
@@ -229,6 +281,8 @@ dp.add_handler(CommandHandler('test', test))
 dp.add_handler(CommandHandler('shrug', shrug))
 dp.add_handler(CommandHandler('event', event, pass_args = True))
 dp.add_handler(CommandHandler('f', payRespects))
+dp.add_handler(CommandHandler('pin', pin, pass_args = True))
+dp.add_handler(CommandHandler('unpin', unpin))
 dp.add_handler(conv_handler)
 
 # HND : Error Handlers
