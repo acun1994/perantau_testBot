@@ -20,8 +20,8 @@
 # DEF : Imports
 import os, telegram, re, logging
 from collections import namedtuple
-from telegram import ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 # DEV : Replace this with dev token if you are testing out code
 token = os.environ['TELEGRAM_TOKEN']
@@ -45,16 +45,20 @@ lastEventCaller = ''
 # VAR : Tracking var for pinned messages
 pinnedMessages = []
 
+# DEF : custom switch to receive query_data and currentName from button()
+def textContentDict(arg, currentName):
+	textContent = {
+		'1': 'Hello {}'.format(currentName),
+		'2': 'Test received {}'.format(currentName),
+		'3': '{} has paid respects to art thou'.format(currentName),
+		'4': '¯\\\_(ツ)\_/¯'
+	}
+	return textContent.get(arg, 'wtf u clicking m8')
+
 # DEF : Regex for date pattern matching
 #       Returns true for all valid dates between 010100 to 311299
 #       Does not handle leap days
 datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-9]|1[0-2])(\d{2})")
-
-# DEF : Keyboard layout for Custom Keyboard module
-CHOOSING = range(1)
-reply_keyboard = [['Hello', 'Ping Me!'],
-                  ['Pay Respect', 'Shrug like AI Chan']]
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
 # FUN : Sends message
 def sendMsg(bot, msg, text, reply = False, keyboard = False):
@@ -157,14 +161,6 @@ def shrug(bot, update):
 	sendMsg(bot, update.message, '{}: ¯\\\_(ツ)\_/¯'.format(update.message.from_user.first_name))
 	delete(bot, update.message)
 
-# HND : Handles /help
-# FUN : Creates custom keyboard layout with 4 functions preset
-# EFF : Caller keyboard is replaced with 4-button keyboard for 1 message
-def help(bot, update):
-	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'help'))
-	keyboardMsg(bot, update.message, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name))
-	return CHOOSING
-
 # HND : Handles /pin
 # FUN : Pins a bot-written message to the chat
 # EFF : Chat has new pinned message
@@ -261,50 +257,20 @@ def command(bot, update):
 
 	reply_markup = InlineKeyboardMarkup(keyboard)
 	bot.sendMessage(update.message.chat_id, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name), reply_markup=reply_markup)
+	currentName = update.message.from_user.first_name
+	logger.info('{}'.format(currentName))
 	delete(bot, update.message)
 
 # HND : Handles /command callback_data
 # FUN : edit text depends on callback_data
 # EFF : inline keyboard will be edited to textContent, depending on callback_data
 def button(bot, update):
-
 	query = update.callback_query
-	textContent = 'wtf u clicking m8'
 
-	if query.data == '1':
-		textContent = 'Hello {}'.format(update.callback_query.from_user.first_name)
-	elif query.data == '2':
-		textContent = 'Test received {}'.format(update.callback_query.from_user.first_name)
-	elif query.data == '3':
-		textContent = '{} has paid respects'.format(update.callback_query.from_user.first_name)
-	elif query.data == '4':
-		textContent = '¯\\\_(ツ)\_/¯'
-	else:
-		textContent = 'wtf u clicking m8'
-
-	bot.edit_message_text(text = textContent,
+	bot.edit_message_text(text = textContentDict(query.data, update.callback_query.from_user.first_name),
                           chat_id = query.message.chat_id,
                           message_id = query.message.message_id,
 						  parse_mode = telegram.ParseMode.MARKDOWN)
-
-# HND : Prep for in-text handling
-conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('help', help)],
-
-        states={
-            CHOOSING: [	RegexHandler('^Hello$', hello),
-						RegexHandler('^Ping Me!$', test),
-						RegexHandler('^Pay Respect$', payRespects),
-						RegexHandler('^Shrug like AI Chan$', shrug),
-                       ],
-
-
-        },
-
-        fallbacks=[	RegexHandler('^Hello|Ping Me!$|Pay Respect|Shrug like AI Chan', shrug)],
-
-		allow_reentry=True
-    )
 	
 # HND : Registers handlers and updaters
 updater = Updater(token)
@@ -313,15 +279,9 @@ dp = updater.dispatcher
 
 # HND : Command Handlers
 dp.add_handler(CommandHandler('start', start))
-dp.add_handler(CommandHandler('hello', hello))
-dp.add_handler(CommandHandler('test', test))
-dp.add_handler(CommandHandler('shrug', shrug))
 dp.add_handler(CommandHandler('event', event, pass_args = True))
-dp.add_handler(CommandHandler('f', payRespects))
 dp.add_handler(CommandHandler('pin', pin, pass_args = True))
 dp.add_handler(CommandHandler('unpin', unpin))
-dp.add_handler(conv_handler)
-
 dp.add_handler(CommandHandler('command', command))
 dp.add_handler(CallbackQueryHandler(button))
 
