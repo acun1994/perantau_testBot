@@ -20,8 +20,8 @@
 # DEF : Imports
 import os, telegram, re, logging
 from collections import namedtuple
-from telegram import ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
+from telegram import ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler, CallbackQueryHandler
 
 # DEV : Replace this with dev token if you are testing out code
 token = os.environ['TELEGRAM_TOKEN']
@@ -54,7 +54,7 @@ datePattern = re.compile("(0[1-9]|[1-2][0-9]|31(?!(?:0[2469]|11))|30(?!02))(0[1-
 CHOOSING = range(1)
 reply_keyboard = [['Hello', 'Ping Me!'],
                   ['Pay Respect', 'Shrug like AI Chan']]
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
 # FUN : Sends message
 def sendMsg(bot, msg, text, reply = False, keyboard = False):
@@ -250,6 +250,43 @@ def event(bot, update, args):
 			\nTo view events , use the command \n\
 			`/event list`")
 
+# HND : Handles /command
+# FUN : Creates custom inline keyboard layout with 4 functions preset
+# EFF : pass callback_data to button() and delete /command
+def command(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'inlineLOL'))
+	keyboard = [[InlineKeyboardButton("Hello", callback_data='1'), InlineKeyboardButton("Ping Me!", callback_data='2')],
+
+                [InlineKeyboardButton("Pay Respect", callback_data='3'), InlineKeyboardButton("Shrug like AI Chan", callback_data='4')]]
+
+	reply_markup = InlineKeyboardMarkup(keyboard)
+	bot.sendMessage(update.message.chat_id, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name), reply_markup=reply_markup)
+	delete(bot, update.message)
+
+# HND : Handles /command callback_data
+# FUN : edit text depends on callback_data
+# EFF : inline keyboard will be edited to textContent, depending on callback_data
+def button(bot, update):
+
+	query = update.callback_query
+	textContent = 'wtf u clicking m8'
+
+	if query.data == '1':
+		textContent = 'Hello {}'.format(update.callback_query.from_user.first_name)
+	elif query.data == '2':
+		textContent = 'Test received {}'.format(update.callback_query.from_user.first_name)
+	elif query.data == '3':
+		textContent = '{} has paid respects'.format(update.callback_query.from_user.first_name)
+	elif query.data == '4':
+		textContent = '¯\\\_(ツ)\_/¯'
+	else:
+		textContent = 'wtf u clicking m8'
+
+	bot.edit_message_text(text = textContent,
+                          chat_id = query.message.chat_id,
+                          message_id = query.message.message_id,
+						  parse_mode = telegram.ParseMode.MARKDOWN)
+
 # HND : Prep for in-text handling
 conv_handler = ConversationHandler(
         entry_points=[CommandHandler('help', help)],
@@ -284,6 +321,9 @@ dp.add_handler(CommandHandler('f', payRespects))
 dp.add_handler(CommandHandler('pin', pin, pass_args = True))
 dp.add_handler(CommandHandler('unpin', unpin))
 dp.add_handler(conv_handler)
+
+dp.add_handler(CommandHandler('command', command))
+dp.add_handler(CallbackQueryHandler(button))
 
 # HND : Error Handlers
 dp.add_error_handler(error)
