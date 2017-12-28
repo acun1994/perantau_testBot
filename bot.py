@@ -20,12 +20,11 @@
 # DEF : Imports
 import os, telegram, re, logging
 from collections import namedtuple
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 # DEV : Replace this with dev token if you are testing out code
 token = os.environ['TELEGRAM_TOKEN']
-
 # DEF : Class definitions
 PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
 Event = namedtuple('Event', 'username date name')
@@ -250,15 +249,13 @@ def event(bot, update, args):
 # FUN : Creates custom inline keyboard layout with 4 functions preset
 # EFF : pass callback_data to button() and delete /command
 def command(bot, update):
-	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'inlineLOL'))
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'command'))
 	keyboard = [[InlineKeyboardButton("Hello", callback_data='1'), InlineKeyboardButton("Ping Me!", callback_data='2')],
 
                 [InlineKeyboardButton("Pay Respect", callback_data='3'), InlineKeyboardButton("Shrug like AI Chan", callback_data='4')]]
 
 	reply_markup = InlineKeyboardMarkup(keyboard)
 	bot.sendMessage(update.message.chat_id, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name), reply_markup=reply_markup)
-	currentName = update.message.from_user.first_name
-	logger.info('{}'.format(currentName))
 	delete(bot, update.message)
 
 # HND : Handles /command callback_data
@@ -271,7 +268,14 @@ def button(bot, update):
                           chat_id = query.message.chat_id,
                           message_id = query.message.message_id,
 						  parse_mode = telegram.ParseMode.MARKDOWN)
-	
+
+# HND : Handles /clean
+# FUN : Clean up all keyboard
+def clean(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'clean'))
+	bot.sendMessage(update.message.chat_id, 'I cleaned this fking keyboard, okay?!', reply_markup=ReplyKeyboardRemove())
+	delete(bot, update.message)
+
 # HND : Registers handlers and updaters
 updater = Updater(token)
 
@@ -283,6 +287,7 @@ dp.add_handler(CommandHandler('event', event, pass_args = True))
 dp.add_handler(CommandHandler('pin', pin, pass_args = True))
 dp.add_handler(CommandHandler('unpin', unpin))
 dp.add_handler(CommandHandler('command', command))
+dp.add_handler(CommandHandler('clean', clean))
 dp.add_handler(CallbackQueryHandler(button))
 
 # HND : Error Handlers
