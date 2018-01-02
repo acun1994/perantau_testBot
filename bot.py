@@ -185,17 +185,49 @@ def command(bot, update):
 	bot.sendMessage(update.message.chat_id, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name), reply_markup=reply_markup)
 	delete(bot, update.message)
 
-# HND : Handles /command callback_data
+# HND : Handles /command and /counter callback_data
 # FUN : edit text depends on callback_data
 # EFF : inline keyboard will be edited to textContent, depending on callback_data
 def button(bot, update):
 	query = update.callback_query
-
-	bot.edit_message_text(text = textContentDict(query.data, update.callback_query.from_user.first_name),
+	a = int(query.data)
+	if (a > 0 and a < 5):
+		bot.edit_message_text(text = textContentDict(query.data, update.callback_query.from_user.first_name),
                           chat_id = query.message.chat_id,
                           message_id = query.message.message_id,
 						  parse_mode = telegram.ParseMode.MARKDOWN)
+	else:
+			logger.info('Counter is originally {}'.format(query.message.text))
 
+			a = int(query.message.text)
+			if query.data == '5':
+				a += 1
+			elif query.data == '6':
+				a -= 1
+			else:
+				a
+
+			keyboard = [[InlineKeyboardButton("Add", callback_data='5'), InlineKeyboardButton("Minus", callback_data='6')]]
+			reply_markup = InlineKeyboardMarkup(keyboard)
+
+			bot.edit_message_text(text = str(a),
+								chat_id = query.message.chat_id,
+								message_id = query.message.message_id,
+								reply_markup = reply_markup)
+			
+			logger.info('Counter is now {}'.format(str(a)))
+
+
+# HND : Handles /counter
+# FUN : Creates custom inline keyboard layout with 2 function to add or minus
+# EFF : pass callback_data to button()
+def counter(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'counter'))
+	keyboard = [[InlineKeyboardButton("Add", callback_data='5'), InlineKeyboardButton("Minus", callback_data='6')]]
+
+	reply_markup = InlineKeyboardMarkup(keyboard)
+	bot.sendMessage(update.message.chat_id, '0', reply_markup=reply_markup)
+	
 # HND : Handles /clean
 # FUN : Clean up all keyboard
 def clean(bot, update):
@@ -213,9 +245,10 @@ dp.add_handler(CommandHandler('start', start))
 dp.add_handler(CommandHandler('event', event, pass_args = True))
 dp.add_handler(CommandHandler('pin', pin, pass_args = True))
 dp.add_handler(CommandHandler('unpin', unpin))
-dp.add_handler(CommandHandler('command', command))
 dp.add_handler(CommandHandler('clean', clean))
+dp.add_handler(CommandHandler('command', command))
 dp.add_handler(CallbackQueryHandler(button))
+dp.add_handler(CommandHandler('counter', counter))
 
 # HND : Error Handlers
 dp.add_error_handler(error)
