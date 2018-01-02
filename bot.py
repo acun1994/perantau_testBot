@@ -184,7 +184,6 @@ def command(bot, update):
 	reply_markup = InlineKeyboardMarkup(keyboard)
 	bot.sendMessage(update.message.chat_id, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name), reply_markup=reply_markup)
 	delete(bot, update.message)
-	return BUTTON
 
 # HND : Handles /command and /counter callback_data
 # FUN : edit text depends on callback_data
