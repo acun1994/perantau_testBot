@@ -45,6 +45,9 @@ lastEventCaller = ''
 # VAR : Tracking var for pinned messages
 pinnedMessages = []
 
+logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logging.INFO)
 
 
 # DEF : Regex for date pattern matching
@@ -264,6 +267,11 @@ def clean(bot, update):
 	bot.sendMessage(update.message.chat_id, 'I cleaned this fking keyboard, okay?!', reply_markup=ReplyKeyboardRemove())
 	delete(bot, update.message)
 
+# ERROR HANDLING
+def error_log(bot, update, error):
+	bot.sendMessage(chat_id='-1001213337130', text = error)
+	
+
 # HND : Registers handlers and updaters
 updater = Updater(token)
 
@@ -281,6 +289,7 @@ dp.add_handler(CommandHandler('counter', counter))
 
 # HND : Error Handlers
 dp.add_error_handler(error)
+dp.add_error_handler(error_log)
 
 updater.start_polling(clean = True)
 updater.idle()
