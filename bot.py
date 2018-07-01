@@ -269,7 +269,7 @@ def clean(bot, update):
 
 # ERROR HANDLING
 def error_log(bot, update, error):
-	bot.sendMessage(chat_id='-1001213337130', text = error)
+	bot.sendMessage(chat_id='-1001213337130', text = ('AP - Update "%s" caused error "%s"', update, error))
 	
 
 # HND : Registers handlers and updaters
