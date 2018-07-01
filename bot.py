@@ -24,7 +24,11 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 # DEV : Replace this with dev token if you are testing out code
-token = os.environ['TELEGRAM_TOKEN']
+#token = os.environ['TELEGRAM_TOKEN']
+
+f = open("token","r")
+if f.mode == "r":
+	token = f.read()
 
 # DEF : Class definitions
 PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
@@ -67,7 +71,7 @@ def sendMsg(bot, msg, text, reply = False, keyboard = False):
 	if (reply is True): 
 		reply_id = msg.message_id
 	if (keyboard is True):
-		reply_markup_flag = markup
+		reply_markup_flag = "markup"
 	return bot.sendMessage(
 		chat_id = msg.chat_id,
 		reply_to_message_id = reply_id,
