@@ -20,8 +20,9 @@
 # DEF : Imports
 import os, telegram, re, logging
 from collections import namedtuple
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from base import logger, textContentDict, sendMsg, replyMsg, pinMsg, inGroup, getChatName, delete, error
 
 # DEV : Replace this with dev token if you are testing out code
 #token = os.environ['TELEGRAM_TOKEN']
@@ -35,11 +36,6 @@ PersonChat = namedtuple('PersonChat', 'user chat_id chat_name')
 Event = namedtuple('Event', 'username date name')
 Pinned = namedtuple('Pinned', 'chat_id message_id')
 
-# LOG : Logger declaration
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # DEF : Global vars
 # VAR : Tracking vars for event module
 private_chats = []
@@ -49,15 +45,7 @@ lastEventCaller = ''
 # VAR : Tracking var for pinned messages
 pinnedMessages = []
 
-# DEF : custom switch to receive query_data and currentName from button()
-def textContentDict(arg, currentName):
-	textContent = {
-		'1': 'Hello {}'.format(currentName),
-		'2': 'Test received {}'.format(currentName),
-		'3': '{} has paid respects to art thou'.format(currentName),
-		'4': '¯\\\_(ツ)\_/¯'
-	}
-	return textContent.get(arg, 'wtf u clicking m8')
+
 
 # DEF : Regex for date pattern matching
 #       Returns true for all valid dates between 010100 to 311299
@@ -89,43 +77,6 @@ def keyboardMsg(bot, msg, text):
 	sendMsg(bot, msg, text, keyboard = True)
 	
 
-# FUN : Pins a message
-def pinMsg(bot, msg):
-	bot.pinChatMessage(
-		chat_id = msg.chat_id,
-		message_id = msg.message_id,
-		disable_notification = True
-	)
-
-# FUN : Returns true if in a group chat	
-def inGroup(msg):
-	return msg.chat.get_members_count() > 2
-
-# FUN : Returns an identifiable name for chats
-#       Groups use title as name
-#       Private chats use their name	
-def getChatName(msg):
-	if inGroup(msg):
-		return msg.chat.title
-	else:
-		return msg.chat.username
-
-# FUN : Deletes message specified as msg		
-def delete(bot, msg):
-	if inGroup(msg):
-		logger.info('{} from {} triggered {}'.format(msg.from_user.first_name, getChatName(msg), 'delete'))
-		del_msg_id = msg.message_id
-		del_chat_id = msg.chat_id
-		bot.deleteMessage(
-			chat_id = del_chat_id, 
-			message_id = del_msg_id
-		)
-	else:
-		logger.info('Could not {} in private chat {}'.format('delete', getChatName(msg)))
-	
-# LOG : Logs error
-def error(bot, update, error):
-    logger.warning('Update "%s" caused error "%s"', update, error)
 
 # DEF : Handlers
 
@@ -254,28 +205,65 @@ def event(bot, update, args):
 # FUN : Creates custom inline keyboard layout with 4 functions preset
 # EFF : pass callback_data to button() and delete /command
 def command(bot, update):
-	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'inlineLOL'))
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'command'))
 	keyboard = [[InlineKeyboardButton("Hello", callback_data='1'), InlineKeyboardButton("Ping Me!", callback_data='2')],
 
                 [InlineKeyboardButton("Pay Respect", callback_data='3'), InlineKeyboardButton("Shrug like AI Chan", callback_data='4')]]
 
 	reply_markup = InlineKeyboardMarkup(keyboard)
 	bot.sendMessage(update.message.chat_id, 'Hi! My name is AI, but you can call me AI chan. Anything that I can help you, {}?'.format(update.message.from_user.first_name), reply_markup=reply_markup)
-	currentName = update.message.from_user.first_name
-	logger.info('{}'.format(currentName))
 	delete(bot, update.message)
 
-# HND : Handles /command callback_data
+# HND : Handles /command and /counter callback_data
 # FUN : edit text depends on callback_data
 # EFF : inline keyboard will be edited to textContent, depending on callback_data
 def button(bot, update):
 	query = update.callback_query
-
-	bot.edit_message_text(text = textContentDict(query.data, update.callback_query.from_user.first_name),
+	a = int(query.data)
+	if (a > 0 and a < 5):
+		bot.edit_message_text(text = textContentDict(query.data, update.callback_query.from_user.first_name),
                           chat_id = query.message.chat_id,
                           message_id = query.message.message_id,
 						  parse_mode = telegram.ParseMode.MARKDOWN)
+	else:
+			logger.info('Counter is originally {}'.format(query.message.text))
+
+			a = int(query.message.text)
+			if query.data == '5':
+				a += 1
+			elif query.data == '6':
+				a -= 1
+			else:
+				a
+
+			keyboard = [[InlineKeyboardButton("Add", callback_data='5'), InlineKeyboardButton("Minus", callback_data='6')]]
+			reply_markup = InlineKeyboardMarkup(keyboard)
+
+			bot.edit_message_text(text = str(a),
+								chat_id = query.message.chat_id,
+								message_id = query.message.message_id,
+								reply_markup = reply_markup)
+			
+			logger.info('Counter is now {}'.format(str(a)))
+
+
+# HND : Handles /counter
+# FUN : Creates custom inline keyboard layout with 2 function to add or minus
+# EFF : pass callback_data to button()
+def counter(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'counter'))
+	keyboard = [[InlineKeyboardButton("Add", callback_data='5'), InlineKeyboardButton("Minus", callback_data='6')]]
+
+	reply_markup = InlineKeyboardMarkup(keyboard)
+	bot.sendMessage(update.message.chat_id, '0', reply_markup=reply_markup)
 	
+# HND : Handles /clean
+# FUN : Clean up all keyboard
+def clean(bot, update):
+	logger.info('{} from {} triggered {}'.format(update.message.from_user.first_name, getChatName(update.message), 'clean'))
+	bot.sendMessage(update.message.chat_id, 'I cleaned this fking keyboard, okay?!', reply_markup=ReplyKeyboardRemove())
+	delete(bot, update.message)
+
 # HND : Registers handlers and updaters
 updater = Updater(token)
 
@@ -286,11 +274,13 @@ dp.add_handler(CommandHandler('start', start))
 dp.add_handler(CommandHandler('event', event, pass_args = True))
 dp.add_handler(CommandHandler('pin', pin, pass_args = True))
 dp.add_handler(CommandHandler('unpin', unpin))
+dp.add_handler(CommandHandler('clean', clean))
 dp.add_handler(CommandHandler('command', command))
 dp.add_handler(CallbackQueryHandler(button))
+dp.add_handler(CommandHandler('counter', counter))
 
 # HND : Error Handlers
 dp.add_error_handler(error)
 
-updater.start_polling()
+updater.start_polling(clean = True)
 updater.idle()
