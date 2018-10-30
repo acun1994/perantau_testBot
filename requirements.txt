@@ -3,5 +3,5 @@ redis
 python-telegram-bot
 
 # If you need to specify a version
-requests==2.16.5
+requests==2.20.0
 
